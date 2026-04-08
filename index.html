@@ -155,7 +155,25 @@ let cache = {}; // date -> { meal_type -> content }
 let selectedDate = todayStr();
 let editingMeal = null;
 
-function todayStr() { return new Date().toISOString().slice(0,10); }
+// ===== 北京时间工具函数 =====
+function getBeijingDate(date = new Date()) {
+  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
+  return new Date(utc + 8 * 60 * 60 * 1000);
+}
+
+function formatDateBeijing(date = new Date()) {
+  const d = getBeijingDate(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// 今天（北京时间）
+function todayStr() {
+  return formatDateBeijing();
+}
+  
 function fmtDate(str) {
   const d = new Date(str + 'T00:00:00');
   return `${d.getMonth()+1}月${d.getDate()}日`;
@@ -241,8 +259,17 @@ function switchTab(tab) {
 function changeDate(delta) {
   const d = new Date(selectedDate + 'T00:00:00');
   d.setDate(d.getDate() + delta);
-  const next = d.toISOString().slice(0,10);
-  if (next <= todayStr()) { selectedDate = next; renderRecord(); }
+
+  const next = formatDateBeijing(d);
+  const today = todayStr();
+
+  if (next > today) {
+    showToast('不能查看未来日期');
+    return;
+  }
+
+  selectedDate = next;
+  renderRecord();
 }
 function updateDayCount() {
   const n = Object.keys(cache).length;
@@ -363,4 +390,3 @@ if (loadConfig()) {
 </script>
 </body>
 </html>
-EOF
