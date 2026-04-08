@@ -328,14 +328,22 @@ async function handleSave(key) {
   }
 }
 async function handleDelete(key) {
+  const meal = MEALS.find(m => m.key === key);
+  const name = meal ? meal.label : '该条记录';
+
+  const ok = confirm(`确定要删除【${name}】吗？此操作不可恢复。`);
+  if (!ok) return;
+
   try {
     await deleteMeal(selectedDate, key);
     delete cache[selectedDate][key];
     if (!Object.keys(cache[selectedDate]).length) delete cache[selectedDate];
     updateDayCount();
     renderRecord();
+    showToast('已删除');
   } catch(e) {
     showToast('删除失败');
+    console.error(e);
   }
 }
 
