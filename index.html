@@ -131,6 +131,27 @@
 <div class="toast" id="toast" style="display:none"></div>
 
 <script>
+let confirmCallback = null;
+
+function openConfirm({ title, text, onOk }) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmText').textContent = text;
+
+  confirmCallback = onOk;
+
+  const modal = document.getElementById('confirmModal');
+  modal.style.display = 'flex';
+
+  document.getElementById('confirmOkBtn').onclick = () => {
+    closeConfirm();
+    confirmCallback && confirmCallback();
+  };
+}
+
+function closeConfirm() {
+  document.getElementById('confirmModal').style.display = 'none';
+  confirmCallback = null;
+}
 const MEALS = [
   { key:'breakfast', label:'早餐', color:'#e8a030' },
   { key:'lunch',     label:'午餐', color:'#4aab82' },
@@ -331,20 +352,22 @@ async function handleDelete(key) {
   const meal = MEALS.find(m => m.key === key);
   const name = meal ? meal.label : '该条记录';
 
-  const ok = confirm(`确定要删除【${name}】吗？此操作不可恢复。`);
-  if (!ok) return;
-
-  try {
-    await deleteMeal(selectedDate, key);
-    delete cache[selectedDate][key];
-    if (!Object.keys(cache[selectedDate]).length) delete cache[selectedDate];
-    updateDayCount();
-    renderRecord();
-    showToast('已删除');
-  } catch(e) {
-    showToast('删除失败');
-    console.error(e);
-  }
+  openConfirm({
+    title: `删除${name}`,
+    text: '确定要删除吗？此操作不可恢复。',
+    onOk: async () => {
+      try {
+        await deleteMeal(selectedDate, key);
+        delete cache[selectedDate][key];
+        if (!Object.keys(cache[selectedDate]).length) delete cache[selectedDate];
+        updateDayCount();
+        renderRecord();
+        showToast('已删除');
+      } catch(e) {
+        showToast('删除失败');
+      }
+    }
+  });
 }
 
 // ---- History ----
@@ -405,5 +428,51 @@ function copyToClipboard() {
   }
 })();
 </script>
+  
+<div id="confirmModal" style="
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+">
+  <div style="
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    width: 85%;
+    max-width: 320px;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+  ">
+    <div id="confirmTitle" style="font-size:16px;font-weight:700;margin-bottom:10px;"></div>
+    <div id="confirmText" style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;"></div>
+
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeConfirm()" style="
+        flex:1;
+        padding:10px;
+        border-radius:10px;
+        border:1px solid var(--border);
+        background:var(--card);
+        color:var(--muted);
+        cursor:pointer;
+      ">取消</button>
+
+      <button id="confirmOkBtn" style="
+        flex:1;
+        padding:10px;
+        border-radius:10px;
+        border:none;
+        background: var(--accent);
+        color:white;
+        font-weight:700;
+        cursor:pointer;
+      ">删除</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
