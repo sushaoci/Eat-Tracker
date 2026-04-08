@@ -60,35 +60,25 @@
   .toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: #2c1f14; color: white; border-radius: 20px; padding: 10px 22px; font-size: 14px; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.2); pointer-events: none; animation: fadeInUp 0.2s ease; }
   @keyframes fadeInUp { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
 
-  /* Config screen */
-  .config-screen { position: fixed; inset: 0; background: var(--bg); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 24px; }
-  .config-card { background: var(--card); border-radius: 20px; padding: 28px 24px; width: 100%; max-width: 400px; border: 1px solid var(--border); box-shadow: 0 8px 40px rgba(0,0,0,0.08); }
-  .config-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
-  .config-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
-  .config-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; }
-  .config-input { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 13px; font-family: inherit; color: var(--text); background: #fdfaf7; outline: none; margin-bottom: 14px; }
-  .config-input:focus { border-color: var(--accent); }
-  .btn-config-save { width: 100%; padding: 13px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px rgba(200,96,58,0.25); margin-top: 4px; }
-  .config-hint { font-size: 11px; color: var(--muted); margin-top: 12px; text-align: center; line-height: 1.6; }
 </style>
 </head>
 <body>
-
-<!-- Config Screen -->
-<div class="config-screen" id="configScreen">
-  <div class="config-card">
-    <div style="font-size:32px;margin-bottom:12px">🥢</div>
-    <div class="config-title">饮食日记</div>
-    <div class="config-sub">首次使用需要填入 Supabase 配置，数据将永久保存在云端 ☁️</div>
-    <label class="config-label">Project URL</label>
-    <input class="config-input" id="cfgUrl" placeholder="https://xxxxxx.supabase.co" />
-    <label class="config-label">Publishable Key（anon key）</label>
-    <input class="config-input" id="cfgKey" placeholder="sb_publishable_..." />
-    <button class="btn-config-save" onclick="saveConfig()">开始使用</button>
-    <div class="config-hint">配置只存在本地，不会上传到任何地方</div>
-  </div>
+  
+<!-- Loading --> 
+<div id="loadingScreen" style="
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  z-index: 999;
+  flex-direction: column;
+">
+  <div style="font-size:32px;margin-bottom:12px">🥢</div>
+  <div style="font-size:14px;color:#9c8878;">连接中，请稍候...</div>
 </div>
-
+  
 <!-- Main App -->
 <div id="app" style="display:none">
   <div class="header">
@@ -216,7 +206,11 @@ function headers() {
 async function dbFetch(path, opts={}) {
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: headers(), ...opts });
   if (!res.ok) { const t = await res.text(); throw new Error(t); }
-  return res.status === 204 ? null : res.json();
+  if (res.status === 204) return null;
+
+  // ✅ 防止空 body 报错
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
 async function loadAll() {
   const rows = await dbFetch('diet_logs?select=date,meal_type,content&order=date.desc');
@@ -229,7 +223,10 @@ async function loadAll() {
 async function upsertMeal(date, meal_type, content) {
   await dbFetch('diet_logs', {
     method: 'POST',
-    headers: { ...headers(), 'Prefer': 'resolution=merge-duplicates' },
+    headers: {
+      ...headers(),
+      'Prefer': 'resolution=merge-duplicates,return=representation'
+    },
     body: JSON.stringify({ date, meal_type, content })
   });
 }
@@ -389,11 +386,14 @@ function copyToClipboard() {
 
 // ---- Start ----
 (async () => {
-  const ok = await loadConfig();
-  if (ok) {
-    document.getElementById('configScreen').style.display = 'none';
+  try {
+    await loadConfig();
+    document.getElementById('loadingScreen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     init();
+  } catch (e) {
+    showToast('配置加载失败');
+    console.error(e);
   }
 })();
 </script>
