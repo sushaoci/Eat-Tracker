@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>饮食日记</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #faf7f2; --card: #ffffff; --accent: #c8603a; --accent2: #e8a87c;
+    --text: #2c1f14; --muted: #9c8878; --border: #ede4d8;
+    --breakfast: #e8a030; --lunch: #4aab82; --dinner: #7b6cb0; --snack: #d95f6e;
+  }
+  body { background: var(--bg); font-family: 'Noto Serif SC','PingFang SC','Hiragino Sans GB',serif; color: var(--text); min-height: 100vh; padding-bottom: 80px; }
+  .header { background: var(--card); border-bottom: 1px solid var(--border); padding: 18px 20px 0; position: sticky; top: 0; z-index: 20; box-shadow: 0 2px 16px rgba(0,0,0,0.05); }
+  .header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .logo { font-size: 26px; }
+  .header-title { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+  .header-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .tabs { display: flex; border-top: 1px solid var(--border); }
+  .tab { flex: 1; padding: 12px 0; border: none; background: none; font-size: 13px; font-family: inherit; color: var(--muted); font-weight: 400; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+  .tab.active { color: var(--accent); font-weight: 700; border-bottom-color: var(--accent); }
+  .content { padding: 20px 16px 0; }
+  .date-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .date-btn { width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--muted); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .date-label { font-size: 16px; font-weight: 700; color: var(--text); }
+  .meal-card { background: var(--card); border-radius: 16px; margin-bottom: 12px; border: 1px solid var(--border); overflow: hidden; transition: border-color 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+  .meal-card.editing { border-color: var(--accent); }
+  .meal-header { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .meal-left { display: flex; align-items: center; gap: 10px; }
+  .meal-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .meal-name { font-size: 15px; font-weight: 600; }
+  .meal-actions { display: flex; gap: 8px; align-items: center; }
+  .btn-del { background: none; border: none; color: #ccc; font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; }
+  .btn-edit { border: none; border-radius: 8px; padding: 5px 14px; font-size: 12px; cursor: pointer; font-weight: 600; font-family: inherit; }
+  .meal-content { padding: 0 16px 14px; font-size: 14px; color: #5c4a3a; line-height: 1.7; }
+  .meal-edit { padding: 0 16px 14px; }
+  .meal-edit textarea { width: 100%; border: 1px solid var(--accent); border-radius: 10px; padding: 10px 12px; font-size: 14px; color: var(--text); background: #fdfaf7; resize: none; outline: none; font-family: inherit; line-height: 1.6; }
+  .edit-btns { display: flex; gap: 8px; margin-top: 8px; }
+  .btn-cancel { flex: 1; padding: 9px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--muted); cursor: pointer; font-size: 13px; font-family: inherit; }
+  .btn-save { flex: 2; padding: 9px; border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 13px; font-weight: 700; font-family: inherit; }
+  .hist-card { background: var(--card); border-radius: 16px; margin-bottom: 12px; padding: 16px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+  .hist-date { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 10px; display: flex; justify-content: space-between; }
+  .hist-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: flex-start; }
+  .hist-tag { font-size: 11px; color: white; border-radius: 5px; padding: 2px 7px; white-space: nowrap; margin-top: 1px; flex-shrink: 0; }
+  .hist-food { font-size: 13px; color: #5c4a3a; line-height: 1.5; }
+  .stat-card { background: var(--card); border-radius: 16px; padding: 20px; border: 1px solid var(--border); margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+  .stat-label { font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+  .stat-num { font-size: 36px; font-weight: 700; color: var(--accent); }
+  .btn-analyze { width: 100%; padding: 16px; border: none; border-radius: 16px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 20px rgba(200,96,58,0.3); margin-bottom: 14px; }
+  .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+  .copy-box { background: #fff8f5; border: 1px dashed var(--accent2); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .copy-box-title { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 10px; }
+  .copy-text { font-size: 12px; color: var(--text); line-height: 1.8; white-space: pre-wrap; max-height: 160px; overflow-y: auto; margin-bottom: 10px; background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
+  .btn-copy { width: 100%; padding: 10px; border: none; border-radius: 10px; background: var(--accent); color: white; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .prompt-hint { background: var(--card); border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border); font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .empty { text-align: center; color: var(--muted); padding: 60px 0; font-size: 15px; }
+  .loading { text-align: center; color: var(--muted); padding: 30px 0; font-size: 14px; }
+  .toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: #2c1f14; color: white; border-radius: 20px; padding: 10px 22px; font-size: 14px; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.2); pointer-events: none; animation: fadeInUp 0.2s ease; }
+  @keyframes fadeInUp { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+
+  /* Config screen */
+  .config-screen { position: fixed; inset: 0; background: var(--bg); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .config-card { background: var(--card); border-radius: 20px; padding: 28px 24px; width: 100%; max-width: 400px; border: 1px solid var(--border); box-shadow: 0 8px 40px rgba(0,0,0,0.08); }
+  .config-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .config-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
+  .config-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; }
+  .config-input { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 13px; font-family: inherit; color: var(--text); background: #fdfaf7; outline: none; margin-bottom: 14px; }
+  .config-input:focus { border-color: var(--accent); }
+  .btn-config-save { width: 100%; padding: 13px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px rgba(200,96,58,0.25); margin-top: 4px; }
+  .config-hint { font-size: 11px; color: var(--muted); margin-top: 12px; text-align: center; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<!-- Config Screen -->
+<div class="config-screen" id="configScreen">
+  <div class="config-card">
+    <div style="font-size:32px;margin-bottom:12px">🥢</div>
+    <div class="config-title">饮食日记</div>
+    <div class="config-sub">首次使用需要填入 Supabase 配置，数据将永久保存在云端 ☁️</div>
+    <label class="config-label">Project URL</label>
+    <input class="config-input" id="cfgUrl" placeholder="https://xxxxxx.supabase.co" />
+    <label class="config-label">Publishable Key（anon key）</label>
+    <input class="config-input" id="cfgKey" placeholder="sb_publishable_..." />
+    <button class="btn-config-save" onclick="saveConfig()">开始使用</button>
+    <div class="config-hint">配置只存在本地，不会上传到任何地方</div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app" style="display:none">
+  <div class="header">
+    <div class="header-top">
+      <span class="logo">🥢</span>
+      <div>
+        <div class="header-title">饮食日记</div>
+        <div class="header-sub" id="dayCount">加载中...</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('record')">记录</button>
+      <button class="tab" onclick="switchTab('history')">历史</button>
+      <button class="tab" onclick="switchTab('analysis')">分析</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div id="tab-record">
+      <div class="date-nav">
+        <button class="date-btn" onclick="changeDate(-1)">‹</button>
+        <div class="date-label" id="dateLabel"></div>
+        <button class="date-btn" onclick="changeDate(1)">›</button>
+      </div>
+      <div id="mealCards"></div>
+    </div>
+
+    <div id="tab-history" style="display:none">
+      <div id="historyList"></div>
+    </div>
+
+    <div id="tab-analysis" style="display:none">
+      <div class="stat-card">
+        <div class="stat-label">已累积数据</div>
+        <div class="stat-num" id="statDays">-</div>
+        <div class="stat-label" style="margin-top:2px">天饮食记录</div>
+        <div class="stat-label" id="statHint" style="margin-top:6px"></div>
+      </div>
+      <button class="btn-analyze" id="analyzeBtn" onclick="generateAnalysis()">✨ 生成分析文字，复制给 Claude</button>
+      <div class="copy-box" id="copyBox" style="display:none">
+        <div class="copy-box-title">📋 复制以下内容，粘贴到 Claude 对话框</div>
+        <div class="copy-text" id="copyText"></div>
+        <button class="btn-copy" onclick="copyToClipboard()">一键复制</button>
+      </div>
+      <div class="prompt-hint">💡 点击按钮生成分析文字，复制后粘贴给 Claude，我会给你详细的营养建议 🥗</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" style="display:none"></div>
+
+<script>
+const MEALS = [
+  { key:'breakfast', label:'早餐', color:'#e8a030' },
+  { key:'lunch',     label:'午餐', color:'#4aab82' },
+  { key:'dinner',    label:'晚餐', color:'#7b6cb0' },
+  { key:'snack',     label:'加餐', color:'#d95f6e' },
+];
+const CFG_KEY = 'diet-supabase-config';
+
+let SUPABASE_URL = '';
+let SUPABASE_ANON_KEY = '';
+let cache = {}; // date -> { meal_type -> content }
+let selectedDate = todayStr();
+let editingMeal = null;
+
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function fmtDate(str) {
+  const d = new Date(str + 'T00:00:00');
+  return `${d.getMonth()+1}月${d.getDate()}日`;
+}
+function showToast(msg, dur=2000) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', dur);
+}
+
+// ---- Config ----
+function loadConfig() {
+  try {
+    const cfg = JSON.parse(localStorage.getItem(CFG_KEY));
+    if (cfg?.url && cfg?.key) { SUPABASE_URL = cfg.url; SUPABASE_ANON_KEY = cfg.key; return true; }
+  } catch {}
+  return false;
+}
+function saveConfig() {
+  const url = document.getElementById('cfgUrl').value.trim().replace(/\/$/, '');
+  const key = document.getElementById('cfgKey').value.trim();
+  if (!url || !key) { showToast('请填写完整'); return; }
+  localStorage.setItem(CFG_KEY, JSON.stringify({ url, key }));
+  SUPABASE_URL = url; SUPABASE_ANON_KEY = key;
+  document.getElementById('configScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  init();
+}
+
+// ---- Supabase API ----
+function headers() {
+  return { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY };
+}
+async function dbFetch(path, opts={}) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: headers(), ...opts });
+  if (!res.ok) { const t = await res.text(); throw new Error(t); }
+  return res.status === 204 ? null : res.json();
+}
+async function loadAll() {
+  const rows = await dbFetch('diet_logs?select=date,meal_type,content&order=date.desc');
+  cache = {};
+  for (const r of rows) {
+    if (!cache[r.date]) cache[r.date] = {};
+    cache[r.date][r.meal_type] = r.content;
+  }
+}
+async function upsertMeal(date, meal_type, content) {
+  await dbFetch('diet_logs', {
+    method: 'POST',
+    headers: { ...headers(), 'Prefer': 'resolution=merge-duplicates' },
+    body: JSON.stringify({ date, meal_type, content })
+  });
+}
+async function deleteMeal(date, meal_type) {
+  await dbFetch(`diet_logs?date=eq.${date}&meal_type=eq.${meal_type}`, { method: 'DELETE' });
+}
+
+// ---- Init ----
+async function init() {
+  showToast('连接数据库中...', 3000);
+  try {
+    await loadAll();
+    updateDayCount();
+    renderRecord();
+    document.getElementById('toast').style.display = 'none';
+  } catch(e) {
+    showToast('连接失败，请检查配置', 4000);
+    console.error(e);
+  }
+}
+
+// ---- Tabs ----
+function switchTab(tab) {
+  ['record','history','analysis'].forEach((t,i) => {
+    document.getElementById('tab-'+t).style.display = t===tab ? 'block' : 'none';
+    document.querySelectorAll('.tab')[i].classList.toggle('active', t===tab);
+  });
+  if (tab==='history') renderHistory();
+  if (tab==='analysis') renderAnalysisTab();
+}
+
+// ---- Date ----
+function changeDate(delta) {
+  const d = new Date(selectedDate + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  const next = d.toISOString().slice(0,10);
+  if (next <= todayStr()) { selectedDate = next; renderRecord(); }
+}
+function updateDayCount() {
+  const n = Object.keys(cache).length;
+  document.getElementById('dayCount').textContent = `已记录 ${n} 天`;
+}
+
+// ---- Record ----
+function renderRecord() {
+  const lbl = selectedDate === todayStr() ? `今天 · ${fmtDate(selectedDate)}` : fmtDate(selectedDate);
+  document.getElementById('dateLabel').textContent = lbl;
+  const dayLog = cache[selectedDate] || {};
+  const container = document.getElementById('mealCards');
+  container.innerHTML = '';
+  MEALS.forEach(m => {
+    const content = dayLog[m.key] || '';
+    const editing = editingMeal === m.key;
+    const card = document.createElement('div');
+    card.className = 'meal-card' + (editing ? ' editing' : '');
+    let inner = `<div class="meal-header"><div class="meal-left"><div class="meal-dot" style="background:${m.color}"></div><span class="meal-name">${m.label}</span></div><div class="meal-actions">`;
+    if (content && !editing) inner += `<button class="btn-del" onclick="handleDelete('${m.key}')">×</button>`;
+    if (!editing) {
+      const s = content ? 'background:#f7f3ef;color:#9c8878;' : `background:${m.color};color:white;`;
+      inner += `<button class="btn-edit" style="${s}" onclick="startEdit('${m.key}')">${content ? '编辑' : '+ 记录'}</button>`;
+    }
+    inner += `</div></div>`;
+    if (content && !editing) inner += `<div class="meal-content">${content}</div>`;
+    if (editing) {
+      inner += `<div class="meal-edit"><textarea id="edit-input" rows="3" placeholder="记录${m.label}吃了什么...">${content}</textarea><div class="edit-btns"><button class="btn-cancel" onclick="cancelEdit()">取消</button><button class="btn-save" style="background:${m.color}" onclick="handleSave('${m.key}')">保存</button></div></div>`;
+    }
+    card.innerHTML = inner;
+    container.appendChild(card);
+    if (editing) setTimeout(() => document.getElementById('edit-input')?.focus(), 50);
+  });
+}
+function startEdit(key) { editingMeal = key; renderRecord(); }
+function cancelEdit() { editingMeal = null; renderRecord(); }
+async function handleSave(key) {
+  const val = document.getElementById('edit-input')?.value?.trim();
+  if (!val) return;
+  const btn = document.querySelector('.btn-save');
+  if (btn) btn.textContent = '保存中...';
+  try {
+    await upsertMeal(selectedDate, key, val);
+    if (!cache[selectedDate]) cache[selectedDate] = {};
+    cache[selectedDate][key] = val;
+    editingMeal = null;
+    updateDayCount();
+    renderRecord();
+    showToast('已保存到云端 ☁️');
+  } catch(e) {
+    showToast('保存失败，请重试');
+    console.error(e);
+  }
+}
+async function handleDelete(key) {
+  try {
+    await deleteMeal(selectedDate, key);
+    delete cache[selectedDate][key];
+    if (!Object.keys(cache[selectedDate]).length) delete cache[selectedDate];
+    updateDayCount();
+    renderRecord();
+  } catch(e) {
+    showToast('删除失败');
+  }
+}
+
+// ---- History ----
+function renderHistory() {
+  const dates = Object.keys(cache).sort((a,b) => b.localeCompare(a));
+  const el = document.getElementById('historyList');
+  if (!dates.length) { el.innerHTML = '<div class="empty">还没有记录，快去记第一餐吧 🍚</div>'; return; }
+  el.innerHTML = dates.map(date => {
+    const dayLog = cache[date];
+    const rows = MEALS.filter(m => dayLog[m.key]).map(m =>
+      `<div class="hist-row"><span class="hist-tag" style="background:${m.color}">${m.label}</span><span class="hist-food">${dayLog[m.key]}</span></div>`
+    ).join('');
+    const label = date === todayStr() ? `今天 · ${fmtDate(date)}` : fmtDate(date);
+    const cnt = MEALS.filter(m => dayLog[m.key]).length;
+    return `<div class="hist-card"><div class="hist-date"><span>${label}</span><span style="color:#ccc;font-size:11px">${cnt} 餐</span></div>${rows}</div>`;
+  }).join('');
+}
+
+// ---- Analysis ----
+function renderAnalysisTab() {
+  const n = Object.keys(cache).length;
+  document.getElementById('statDays').textContent = n;
+  document.getElementById('statHint').textContent = n < 3 ? '继续记录，数据越多分析越准确 💪' : '数据已充足，可以生成分析啦 🎉';
+}
+function generateAnalysis() {
+  const dates = Object.keys(cache).sort();
+  if (!dates.length) { showToast('还没有记录哦'); return; }
+  const lines = dates.map(date => {
+    const parts = MEALS.filter(m => cache[date][m.key]).map(m => `${m.label}：${cache[date][m.key]}`).join('；');
+    return `${fmtDate(date)} ${parts}`;
+  }).join('\n');
+  const prompt = `以下是我最近的饮食记录：\n\n${lines}\n\n请作为营养师，用中文给我具体、实用的饮食改善建议。分析维度包括：营养均衡度、蛋白质/蔬菜/主食比例、饮食规律性、可能的营养缺口。语气亲切，建议具体可操作。`;
+  document.getElementById('copyText').textContent = prompt;
+  document.getElementById('copyBox').style.display = 'block';
+}
+function copyToClipboard() {
+  const text = document.getElementById('copyText').textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showToast('已复制 ✓ 请粘贴给 Claude'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('已复制 ✓ 请粘贴给 Claude');
+  }
+}
+
+// ---- Start ----
+if (loadConfig()) {
+  document.getElementById('configScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  init();
+}
+</script>
+</body>
+</html>
+EOF
