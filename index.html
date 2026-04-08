@@ -388,11 +388,14 @@ function copyToClipboard() {
 }
 
 // ---- Start ----
-if (loadConfig()) {
-  document.getElementById('configScreen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  init();
-}
+(async () => {
+  const ok = await loadConfig();
+  if (ok) {
+    document.getElementById('configScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    init();
+  }
+})();
 </script>
 </body>
 </html>
