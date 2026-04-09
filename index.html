@@ -5,82 +5,267 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>饮食日记</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #faf7f2; --card: #ffffff; --accent: #c8603a; --accent2: #e8a87c;
-    --text: #2c1f14; --muted: #9c8878; --border: #ede4d8;
-    --breakfast: #e8a030; --lunch: #4aab82; --dinner: #7b6cb0; --snack: #d95f6e;
-  }
-  body { background: var(--bg); font-family: 'Noto Serif SC','PingFang SC','Hiragino Sans GB',serif; color: var(--text); min-height: 100vh; padding-bottom: 80px; }
-  .header { background: var(--card); border-bottom: 1px solid var(--border); padding: 18px 20px 0; position: sticky; top: 0; z-index: 20; box-shadow: 0 2px 16px rgba(0,0,0,0.05); }
-  .header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-  .logo { font-size: 26px; }
-  .header-title { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
-  .header-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .tabs { display: flex; border-top: 1px solid var(--border); }
-  .tab { flex: 1; padding: 12px 0; border: none; background: none; font-size: 13px; font-family: inherit; color: var(--muted); font-weight: 400; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
-  .tab.active { color: var(--accent); font-weight: 700; border-bottom-color: var(--accent); }
-  .content { padding: 20px 16px 0; }
-  .date-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-  .date-btn { width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--muted); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .date-label { font-size: 16px; font-weight: 700; color: var(--text); }
-  .meal-card { background: var(--card); border-radius: 16px; margin-bottom: 12px; border: 1px solid var(--border); overflow: hidden; transition: border-color 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-  .meal-card.editing { border-color: var(--accent); }
-  .meal-header { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
-  .meal-left { display: flex; align-items: center; gap: 10px; }
-  .meal-dot { width: 8px; height: 8px; border-radius: 50%; }
-  .meal-name { font-size: 15px; font-weight: 600; }
-  .meal-actions { display: flex; gap: 8px; align-items: center; }
-  .btn-del { background: none; border: none; color: #ccc; font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; }
-  .btn-edit { border: none; border-radius: 8px; padding: 5px 14px; font-size: 12px; cursor: pointer; font-weight: 600; font-family: inherit; }
-  .meal-content { padding: 0 16px 14px; font-size: 14px; color: #5c4a3a; line-height: 1.7; }
-  .meal-edit { padding: 0 16px 14px; }
-  .meal-edit textarea { width: 100%; border: 1px solid var(--accent); border-radius: 10px; padding: 10px 12px; font-size: 14px; color: var(--text); background: #fdfaf7; resize: none; outline: none; font-family: inherit; line-height: 1.6; }
-  .edit-btns { display: flex; gap: 8px; margin-top: 8px; }
-  .btn-cancel { flex: 1; padding: 9px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--muted); cursor: pointer; font-size: 13px; font-family: inherit; }
-  .btn-save { flex: 2; padding: 9px; border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 13px; font-weight: 700; font-family: inherit; }
-  .hist-card { background: var(--card); border-radius: 16px; margin-bottom: 12px; padding: 16px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-  .hist-date { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 10px; display: flex; justify-content: space-between; }
-  .hist-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: flex-start; }
-  .hist-tag { font-size: 11px; color: white; border-radius: 5px; padding: 2px 7px; white-space: nowrap; margin-top: 1px; flex-shrink: 0; }
-  .hist-food { font-size: 13px; color: #5c4a3a; line-height: 1.5; }
-  .stat-card { background: var(--card); border-radius: 16px; padding: 20px; border: 1px solid var(--border); margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-  .stat-label { font-size: 14px; color: var(--muted); margin-bottom: 6px; }
-  .stat-num { font-size: 36px; font-weight: 700; color: var(--accent); }
-  .btn-analyze { width: 100%; padding: 16px; border: none; border-radius: 16px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 20px rgba(200,96,58,0.3); margin-bottom: 14px; }
-  .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
-  .copy-box { background: #fff8f5; border: 1px dashed var(--accent2); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
-  .copy-box-title { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 10px; }
-  .copy-text { font-size: 12px; color: var(--text); line-height: 1.8; white-space: pre-wrap; max-height: 160px; overflow-y: auto; margin-bottom: 10px; background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
-  .btn-copy { width: 100%; padding: 10px; border: none; border-radius: 10px; background: var(--accent); color: white; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
-  .prompt-hint { background: var(--card); border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border); font-size: 13px; color: var(--muted); line-height: 1.7; }
-  .empty { text-align: center; color: var(--muted); padding: 60px 0; font-size: 15px; }
-  .loading { text-align: center; color: var(--muted); padding: 30px 0; font-size: 14px; }
-  .toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: #2c1f14; color: white; border-radius: 20px; padding: 10px 22px; font-size: 14px; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.2); pointer-events: none; animation: fadeInUp 0.2s ease; }
-  @keyframes fadeInUp { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+/* ============================================================
+   THEME & RESET
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap');
 
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #faf7f2;
+  --card: #ffffff;
+  --accent: #c8603a;
+  --accent2: #e8a87c;
+  --text: #2c1f14;
+  --muted: #9c8878;
+  --border: #ede4d8;
+  --color-breakfast: #e8a030;
+  --color-lunch: #4aab82;
+  --color-dinner: #7b6cb0;
+  --color-snack: #d95f6e;
+  --radius-card: 16px;
+  --radius-btn: 10px;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.03);
+  --font: 'Noto Serif SC','PingFang SC','Hiragino Sans GB',serif;
+}
+
+body {
+  background: var(--bg);
+  font-family: var(--font);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+/* ============================================================
+   LAYOUT — HEADER & TABS
+   ============================================================ */
+.header {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 18px 20px 0;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+}
+.header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.logo { font-size: 26px; }
+.header-title { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+.header-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.tabs { display: flex; border-top: 1px solid var(--border); }
+.tab {
+  flex: 1; padding: 12px 0;
+  border: none; background: none;
+  font-size: 13px; font-family: var(--font);
+  color: var(--muted); font-weight: 400;
+  border-bottom: 2px solid transparent;
+  cursor: pointer; transition: all 0.2s;
+}
+.tab.active { color: var(--accent); font-weight: 700; border-bottom-color: var(--accent); }
+
+.content { padding: 20px 16px 0; }
+
+/* ============================================================
+   COMPONENTS — DATE NAV
+   ============================================================ */
+.date-nav {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 18px;
+}
+.date-btn {
+  width: 36px; height: 36px;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--card); color: var(--muted);
+  font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.date-label { font-size: 16px; font-weight: 700; color: var(--text); }
+
+/* ============================================================
+   COMPONENTS — MEAL CARD
+   ============================================================ */
+.meal-card {
+  background: var(--card); border-radius: var(--radius-card);
+  margin-bottom: 12px; border: 1px solid var(--border);
+  overflow: hidden; transition: border-color 0.2s;
+  box-shadow: var(--shadow-card);
+}
+.meal-card.editing { border-color: var(--accent); }
+
+.meal-header {
+  padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.meal-left { display: flex; align-items: center; gap: 10px; }
+.meal-dot { width: 8px; height: 8px; border-radius: 50%; }
+.meal-name { font-size: 15px; font-weight: 600; }
+.meal-actions { display: flex; gap: 8px; align-items: center; }
+
+.btn-del {
+  background: none; border: none; color: #ccc;
+  font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1;
+}
+.btn-edit {
+  border: none; border-radius: 8px; padding: 5px 14px;
+  font-size: 12px; cursor: pointer; font-weight: 600; font-family: var(--font);
+}
+
+.meal-content {
+  padding: 0 16px 14px; font-size: 14px;
+  color: #5c4a3a; line-height: 1.7;
+}
+.meal-edit { padding: 0 16px 14px; }
+.meal-edit textarea {
+  width: 100%; border: 1px solid var(--accent); border-radius: 10px;
+  padding: 10px 12px; font-size: 14px; color: var(--text);
+  background: #fdfaf7; resize: none; outline: none;
+  font-family: var(--font); line-height: 1.6;
+}
+.edit-btns { display: flex; gap: 8px; margin-top: 8px; }
+.btn-cancel {
+  flex: 1; padding: 9px; border: 1px solid var(--border);
+  border-radius: 10px; background: var(--card); color: var(--muted);
+  cursor: pointer; font-size: 13px; font-family: var(--font);
+}
+.btn-save {
+  flex: 2; padding: 9px; border: none; border-radius: 10px;
+  color: white; cursor: pointer; font-size: 13px;
+  font-weight: 700; font-family: var(--font);
+}
+
+/* ============================================================
+   COMPONENTS — HISTORY CARD
+   ============================================================ */
+.hist-card {
+  background: var(--card); border-radius: var(--radius-card);
+  margin-bottom: 12px; padding: 16px;
+  border: 1px solid var(--border); box-shadow: var(--shadow-card);
+}
+.hist-date {
+  font-size: 13px; font-weight: 700; color: var(--accent);
+  margin-bottom: 10px; display: flex; justify-content: space-between;
+}
+.hist-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: flex-start; }
+.hist-tag {
+  font-size: 11px; color: white; border-radius: 5px;
+  padding: 2px 7px; white-space: nowrap; margin-top: 1px; flex-shrink: 0;
+}
+.hist-food { font-size: 13px; color: #5c4a3a; line-height: 1.5; }
+
+/* ============================================================
+   COMPONENTS — ANALYSIS TAB
+   ============================================================ */
+.stat-card {
+  background: var(--card); border-radius: var(--radius-card);
+  padding: 20px; border: 1px solid var(--border);
+  margin-bottom: 14px; box-shadow: var(--shadow-card);
+}
+.stat-label { font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+.stat-num { font-size: 36px; font-weight: 700; color: var(--accent); }
+
+.btn-analyze {
+  width: 100%; padding: 16px; border: none; border-radius: var(--radius-card);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: white; font-size: 16px; font-weight: 700;
+  cursor: pointer; font-family: var(--font);
+  box-shadow: 0 4px 20px rgba(200,96,58,0.3); margin-bottom: 14px;
+}
+.btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+.copy-box {
+  background: #fff8f5; border: 1px dashed var(--accent2);
+  border-radius: 12px; padding: 16px; margin-bottom: 14px;
+}
+.copy-box-title { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 10px; }
+.copy-text {
+  font-size: 12px; color: var(--text); line-height: 1.8;
+  white-space: pre-wrap; max-height: 160px; overflow-y: auto;
+  margin-bottom: 10px; background: white; padding: 10px;
+  border-radius: 8px; border: 1px solid var(--border);
+}
+.btn-copy {
+  width: 100%; padding: 10px; border: none; border-radius: 10px;
+  background: var(--accent); color: white; font-size: 14px;
+  font-weight: 700; cursor: pointer; font-family: var(--font);
+}
+.prompt-hint {
+  background: var(--card); border-radius: 12px; padding: 14px 16px;
+  border: 1px solid var(--border); font-size: 13px;
+  color: var(--muted); line-height: 1.7;
+}
+
+/* ============================================================
+   COMPONENTS — UTILITIES
+   ============================================================ */
+.empty { text-align: center; color: var(--muted); padding: 60px 0; font-size: 15px; }
+.loading { text-align: center; color: var(--muted); padding: 30px 0; font-size: 14px; }
+
+.toast {
+  position: fixed; bottom: 40px; left: 50%;
+  transform: translateX(-50%);
+  background: #2c1f14; color: white; border-radius: 20px;
+  padding: 10px 22px; font-size: 14px; z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  pointer-events: none; animation: fadeInUp 0.2s ease;
+}
+@keyframes fadeInUp {
+  from { opacity:0; transform:translateX(-50%) translateY(10px); }
+  to   { opacity:1; transform:translateX(-50%) translateY(0); }
+}
+
+/* ============================================================
+   COMPONENTS — CONFIRM MODAL
+   ============================================================ */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none; align-items: center; justify-content: center;
+  z-index: 200;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--card); border-radius: var(--radius-card);
+  padding: 20px; width: 85%; max-width: 320px;
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+}
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+.modal-text  { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
+.modal-btns  { display: flex; gap: 10px; }
+.modal-btn-cancel {
+  flex: 1; padding: 10px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--card);
+  color: var(--muted); cursor: pointer; font-family: var(--font);
+}
+.modal-btn-ok {
+  flex: 1; padding: 10px; border-radius: 10px; border: none;
+  background: var(--accent); color: white;
+  font-weight: 700; cursor: pointer; font-family: var(--font);
+}
 </style>
 </head>
 <body>
-  
-<!-- Loading --> 
+
+<!-- ============================================================
+     MARKUP
+     ============================================================ -->
+
+<!-- Loading Screen -->
 <div id="loadingScreen" style="
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg);
-  z-index: 999;
-  flex-direction: column;
+  position:fixed; inset:0; display:flex; align-items:center;
+  justify-content:center; background:var(--bg); z-index:999;
+  flex-direction:column;
 ">
   <div style="font-size:32px;margin-bottom:12px">🥢</div>
   <div style="font-size:14px;color:#9c8878;">连接中，请稍候...</div>
 </div>
-  
-<!-- Main App -->
+
+<!-- App Shell -->
 <div id="app" style="display:none">
+  <!-- Header -->
   <div class="header">
     <div class="header-top">
       <span class="logo">🥢</span>
@@ -90,389 +275,629 @@
       </div>
     </div>
     <div class="tabs">
-      <button class="tab active" onclick="switchTab('record')">记录</button>
-      <button class="tab" onclick="switchTab('history')">历史</button>
-      <button class="tab" onclick="switchTab('analysis')">分析</button>
+      <button class="tab active" data-tab="record">记录</button>
+      <button class="tab" data-tab="history">历史</button>
+      <button class="tab" data-tab="analysis">分析</button>
     </div>
   </div>
 
-  <div class="content">
-    <div id="tab-record">
-      <div class="date-nav">
-        <button class="date-btn" onclick="changeDate(-1)">‹</button>
-        <div class="date-label" id="dateLabel"></div>
-        <button class="date-btn" onclick="changeDate(1)">›</button>
-      </div>
-      <div id="mealCards"></div>
+  <!-- Tab: Record -->
+  <div class="content" id="tab-record">
+    <div class="date-nav">
+      <button class="date-btn" id="prevDateBtn">‹</button>
+      <div class="date-label" id="dateLabel"></div>
+      <button class="date-btn" id="nextDateBtn">›</button>
     </div>
+    <div id="mealCards"></div>
+  </div>
 
-    <div id="tab-history" style="display:none">
-      <div id="historyList"></div>
-    </div>
+  <!-- Tab: History -->
+  <div class="content" id="tab-history" style="display:none">
+    <div id="historyList"></div>
+  </div>
 
-    <div id="tab-analysis" style="display:none">
-      <div class="stat-card">
-        <div class="stat-label">已累积数据</div>
-        <div class="stat-num" id="statDays">-</div>
-        <div class="stat-label" style="margin-top:2px">天饮食记录</div>
-        <div class="stat-label" id="statHint" style="margin-top:6px"></div>
-      </div>
-      <button class="btn-analyze" id="analyzeBtn" onclick="generateAnalysis()">✨ 生成分析文字，复制给 Claude</button>
-      <div class="copy-box" id="copyBox" style="display:none">
-        <div class="copy-box-title">📋 复制以下内容，粘贴到 Claude 对话框</div>
-        <div class="copy-text" id="copyText"></div>
-        <button class="btn-copy" onclick="copyToClipboard()">一键复制</button>
-      </div>
-      <div class="prompt-hint">💡 点击按钮生成分析文字，复制后粘贴给 Claude，我会给你详细的营养建议 🥗</div>
+  <!-- Tab: Analysis -->
+  <div class="content" id="tab-analysis" style="display:none">
+    <div class="stat-card">
+      <div class="stat-label">已累积数据</div>
+      <div class="stat-num" id="statDays">-</div>
+      <div class="stat-label" style="margin-top:2px">天饮食记录</div>
+      <div class="stat-label" id="statHint" style="margin-top:6px"></div>
     </div>
+    <button class="btn-analyze" id="analyzeBtn">✨ 生成分析文字，复制给 Claude</button>
+    <div class="copy-box" id="copyBox" style="display:none">
+      <div class="copy-box-title">📋 复制以下内容，粘贴到 Claude 对话框</div>
+      <div class="copy-text" id="copyText"></div>
+      <button class="btn-copy" id="copyBtn">一键复制</button>
+    </div>
+    <div class="prompt-hint">💡 点击按钮生成分析文字，复制后粘贴给 Claude，我会给你详细的营养建议 🥗</div>
   </div>
 </div>
 
+<!-- Toast -->
 <div class="toast" id="toast" style="display:none"></div>
 
-<script>
-let confirmCallback = null;
-
-function openConfirm({ title, text, onOk }) {
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmText').textContent = text;
-
-  confirmCallback = onOk;
-
-  const modal = document.getElementById('confirmModal');
-  modal.style.display = 'flex';
-
-  document.getElementById('confirmOkBtn').onclick = () => {
-    closeConfirm();
-    confirmCallback && confirmCallback();
-  };
-}
-
-function closeConfirm() {
-  document.getElementById('confirmModal').style.display = 'none';
-  confirmCallback = null;
-}
-const MEALS = [
-  { key:'breakfast', label:'早餐', color:'#e8a030' },
-  { key:'lunch',     label:'午餐', color:'#4aab82' },
-  { key:'dinner',    label:'晚餐', color:'#7b6cb0' },
-  { key:'snack',     label:'加餐', color:'#d95f6e' },
-];
-const CFG_KEY = 'diet-supabase-config';
-
-let SUPABASE_URL = '';
-let SUPABASE_ANON_KEY = '';
-let cache = {}; // date -> { meal_type -> content }
-let selectedDate = todayStr();
-let editingMeal = null;
-
-// ===== 北京时间工具函数 =====
-function getBeijingDate(date = new Date()) {
-  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
-  return new Date(utc + 8 * 60 * 60 * 1000);
-}
-
-function formatDateBeijing(date = new Date()) {
-  const d = getBeijingDate(date);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-// 今天（北京时间）
-function todayStr() {
-  return formatDateBeijing();
-}
-  
-function fmtDate(str) {
-  const d = new Date(str + 'T00:00:00');
-  return `${d.getMonth()+1}月${d.getDate()}日`;
-}
-function showToast(msg, dur=2000) {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.style.display = 'block';
-  setTimeout(() => el.style.display = 'none', dur);
-}
-
-// ---- Config ----
-async function loadConfig() {
-  try {
-    const res = await fetch('/api/config');
-    const data = await res.json();
-
-    SUPABASE_URL = data.url;
-    SUPABASE_ANON_KEY = data.key;
-    return true;
-  } catch (e) {
-    showToast('加载配置失败');
-    return false;
-  }
-}
-function saveConfig() {
-  const url = document.getElementById('cfgUrl').value.trim().replace(/\/$/, '');
-  const key = document.getElementById('cfgKey').value.trim();
-  if (!url || !key) { showToast('请填写完整'); return; }
-  localStorage.setItem(CFG_KEY, JSON.stringify({ url, key }));
-  SUPABASE_URL = url; SUPABASE_ANON_KEY = key;
-  document.getElementById('configScreen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  init();
-}
-
-// ---- Supabase API ----
-function headers() {
-  return { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY };
-}
-async function dbFetch(path, opts={}) {
-  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: headers(), ...opts });
-  if (!res.ok) { const t = await res.text(); throw new Error(t); }
-  if (res.status === 204) return null;
-
-  // ✅ 防止空 body 报错
-  const text = await res.text();
-  return text ? JSON.parse(text) : null;
-}
-async function loadAll() {
-  const rows = await dbFetch('diet_logs?select=date,meal_type,content&order=date.desc');
-  cache = {};
-  for (const r of rows) {
-    if (!cache[r.date]) cache[r.date] = {};
-    cache[r.date][r.meal_type] = r.content;
-  }
-}
-async function upsertMeal(date, meal_type, content) {
-  await dbFetch('diet_logs', {
-    method: 'POST',
-    headers: {
-      ...headers(),
-      'Prefer': 'resolution=merge-duplicates,return=representation'
-    },
-    body: JSON.stringify({ date, meal_type, content })
-  });
-}
-async function deleteMeal(date, meal_type) {
-  await dbFetch(`diet_logs?date=eq.${date}&meal_type=eq.${meal_type}`, { method: 'DELETE' });
-}
-
-// ---- Init ----
-async function init() {
-  showToast('连接数据库中...', 3000);
-  try {
-    await loadAll();
-    updateDayCount();
-    renderRecord();
-    document.getElementById('toast').style.display = 'none';
-  } catch(e) {
-    showToast('连接失败，请检查配置', 4000);
-    console.error(e);
-  }
-}
-
-// ---- Tabs ----
-function switchTab(tab) {
-  ['record','history','analysis'].forEach((t,i) => {
-    document.getElementById('tab-'+t).style.display = t===tab ? 'block' : 'none';
-    document.querySelectorAll('.tab')[i].classList.toggle('active', t===tab);
-  });
-  if (tab==='history') renderHistory();
-  if (tab==='analysis') renderAnalysisTab();
-}
-
-// ---- Date ----
-function changeDate(delta) {
-  const d = new Date(selectedDate + 'T00:00:00');
-  d.setDate(d.getDate() + delta);
-
-  const next = formatDateBeijing(d);
-  const today = todayStr();
-
-  if (next > today) {
-    showToast('不能查看未来日期');
-    return;
-  }
-
-  selectedDate = next;
-  renderRecord();
-}
-function updateDayCount() {
-  const n = Object.keys(cache).length;
-  document.getElementById('dayCount').textContent = `已记录 ${n} 天`;
-}
-
-// ---- Record ----
-function renderRecord() {
-  const lbl = selectedDate === todayStr() ? `今天 · ${fmtDate(selectedDate)}` : fmtDate(selectedDate);
-  document.getElementById('dateLabel').textContent = lbl;
-  const dayLog = cache[selectedDate] || {};
-  const container = document.getElementById('mealCards');
-  container.innerHTML = '';
-  MEALS.forEach(m => {
-    const content = dayLog[m.key] || '';
-    const editing = editingMeal === m.key;
-    const card = document.createElement('div');
-    card.className = 'meal-card' + (editing ? ' editing' : '');
-    let inner = `<div class="meal-header"><div class="meal-left"><div class="meal-dot" style="background:${m.color}"></div><span class="meal-name">${m.label}</span></div><div class="meal-actions">`;
-    if (content && !editing) inner += `<button class="btn-del" onclick="handleDelete('${m.key}')">×</button>`;
-    if (!editing) {
-      const s = content ? 'background:#f7f3ef;color:#9c8878;' : `background:${m.color};color:white;`;
-      inner += `<button class="btn-edit" style="${s}" onclick="startEdit('${m.key}')">${content ? '编辑' : '+ 记录'}</button>`;
-    }
-    inner += `</div></div>`;
-    if (content && !editing) inner += `<div class="meal-content">${content}</div>`;
-    if (editing) {
-      inner += `<div class="meal-edit"><textarea id="edit-input" rows="3" placeholder="记录${m.label}吃了什么...">${content}</textarea><div class="edit-btns"><button class="btn-cancel" onclick="cancelEdit()">取消</button><button class="btn-save" style="background:${m.color}" onclick="handleSave('${m.key}')">保存</button></div></div>`;
-    }
-    card.innerHTML = inner;
-    container.appendChild(card);
-    if (editing) setTimeout(() => document.getElementById('edit-input')?.focus(), 50);
-  });
-}
-function startEdit(key) { editingMeal = key; renderRecord(); }
-function cancelEdit() { editingMeal = null; renderRecord(); }
-async function handleSave(key) {
-  const val = document.getElementById('edit-input')?.value?.trim();
-  if (!val) return;
-  const btn = document.querySelector('.btn-save');
-  if (btn) btn.textContent = '保存中...';
-  try {
-    await upsertMeal(selectedDate, key, val);
-    if (!cache[selectedDate]) cache[selectedDate] = {};
-    cache[selectedDate][key] = val;
-    editingMeal = null;
-    updateDayCount();
-    renderRecord();
-    showToast('已保存到云端 ☁️');
-  } catch(e) {
-    showToast('保存失败，请重试');
-    console.error(e);
-  }
-}
-async function handleDelete(key) {
-  const meal = MEALS.find(m => m.key === key);
-  const name = meal ? meal.label : '该条记录';
-
-  openConfirm({
-    title: `删除${name}`,
-    text: '确定要删除吗？此操作不可恢复。',
-    onOk: async () => {
-      try {
-        await deleteMeal(selectedDate, key);
-        delete cache[selectedDate][key];
-        if (!Object.keys(cache[selectedDate]).length) delete cache[selectedDate];
-        updateDayCount();
-        renderRecord();
-        showToast('已删除');
-      } catch(e) {
-        showToast('删除失败');
-      }
-    }
-  });
-}
-
-// ---- History ----
-function renderHistory() {
-  const dates = Object.keys(cache).sort((a,b) => b.localeCompare(a));
-  const el = document.getElementById('historyList');
-  if (!dates.length) { el.innerHTML = '<div class="empty">还没有记录，快去记第一餐吧 🍚</div>'; return; }
-  el.innerHTML = dates.map(date => {
-    const dayLog = cache[date];
-    const rows = MEALS.filter(m => dayLog[m.key]).map(m =>
-      `<div class="hist-row"><span class="hist-tag" style="background:${m.color}">${m.label}</span><span class="hist-food">${dayLog[m.key]}</span></div>`
-    ).join('');
-    const label = date === todayStr() ? `今天 · ${fmtDate(date)}` : fmtDate(date);
-    const cnt = MEALS.filter(m => dayLog[m.key]).length;
-    return `<div class="hist-card"><div class="hist-date"><span>${label}</span><span style="color:#ccc;font-size:11px">${cnt} 餐</span></div>${rows}</div>`;
-  }).join('');
-}
-
-// ---- Analysis ----
-function renderAnalysisTab() {
-  const n = Object.keys(cache).length;
-  document.getElementById('statDays').textContent = n;
-  document.getElementById('statHint').textContent = n < 3 ? '继续记录，数据越多分析越准确 💪' : '数据已充足，可以生成分析啦 🎉';
-}
-function generateAnalysis() {
-  const dates = Object.keys(cache).sort();
-  if (!dates.length) { showToast('还没有记录哦'); return; }
-  const lines = dates.map(date => {
-    const parts = MEALS.filter(m => cache[date][m.key]).map(m => `${m.label}：${cache[date][m.key]}`).join('；');
-    return `${fmtDate(date)} ${parts}`;
-  }).join('\n');
-  const prompt = `以下是我最近的饮食记录：\n\n${lines}\n\n请作为营养师，用中文给我具体、实用的饮食改善建议。分析维度包括：营养均衡度、蛋白质/蔬菜/主食比例、饮食规律性、可能的营养缺口。语气亲切，建议具体可操作。`;
-  document.getElementById('copyText').textContent = prompt;
-  document.getElementById('copyBox').style.display = 'block';
-}
-function copyToClipboard() {
-  const text = document.getElementById('copyText').textContent;
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => showToast('已复制 ✓ 请粘贴给 Claude'));
-  } else {
-    const ta = document.createElement('textarea');
-    ta.value = text; document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); document.body.removeChild(ta);
-    showToast('已复制 ✓ 请粘贴给 Claude');
-  }
-}
-
-// ---- Start ----
-(async () => {
-  try {
-    await loadConfig();
-    document.getElementById('loadingScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    init();
-  } catch (e) {
-    showToast('配置加载失败');
-    console.error(e);
-  }
-})();
-</script>
-  
-<div id="confirmModal" style="
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-">
-  <div style="
-    background: var(--card);
-    border-radius: 16px;
-    padding: 20px;
-    width: 85%;
-    max-width: 320px;
-    border: 1px solid var(--border);
-    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
-  ">
-    <div id="confirmTitle" style="font-size:16px;font-weight:700;margin-bottom:10px;"></div>
-    <div id="confirmText" style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;"></div>
-
-    <div style="display:flex;gap:10px;">
-      <button onclick="closeConfirm()" style="
-        flex:1;
-        padding:10px;
-        border-radius:10px;
-        border:1px solid var(--border);
-        background:var(--card);
-        color:var(--muted);
-        cursor:pointer;
-      ">取消</button>
-
-      <button id="confirmOkBtn" style="
-        flex:1;
-        padding:10px;
-        border-radius:10px;
-        border:none;
-        background: var(--accent);
-        color:white;
-        font-weight:700;
-        cursor:pointer;
-      ">删除</button>
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <div class="modal-title" id="confirmTitle"></div>
+    <div class="modal-text"  id="confirmText"></div>
+    <div class="modal-btns">
+      <button class="modal-btn-cancel" id="confirmCancelBtn">取消</button>
+      <button class="modal-btn-ok"     id="confirmOkBtn">删除</button>
     </div>
   </div>
 </div>
+
+<!-- ============================================================
+     SCRIPTS — modular sections, each with a clear responsibility
+     ============================================================ -->
+<script>
+/* ==============================================================
+   MODULE: Constants
+   静态配置，不依赖任何其他模块
+   ============================================================== */
+const MEALS = Object.freeze([
+  { key: 'breakfast', label: '早餐', color: '#e8a030' },
+  { key: 'lunch',     label: '午餐', color: '#4aab82' },
+  { key: 'dinner',    label: '晚餐', color: '#7b6cb0' },
+  { key: 'snack',     label: '加餐', color: '#d95f6e' },
+]);
+
+const TABS = ['record', 'history', 'analysis'];
+
+
+/* ==============================================================
+   MODULE: DateUtils
+   所有日期计算，统一使用北京时间（UTC+8）
+   ============================================================== */
+const DateUtils = (() => {
+  function toBeijing(date = new Date()) {
+    const utc = date.getTime() + date.getTimezoneOffset() * 60000;
+    return new Date(utc + 8 * 3600 * 1000);
+  }
+
+  function toISO(date = new Date()) {
+    const d = toBeijing(date);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function today() {
+    return toISO();
+  }
+
+  // "2024-05-01" → "5月1日"
+  function format(iso) {
+    const d = new Date(iso + 'T00:00:00');
+    return `${d.getMonth() + 1}月${d.getDate()}日`;
+  }
+
+  // 偏移 N 天，返回 ISO 字符串
+  function offset(iso, days) {
+    const d = new Date(iso + 'T00:00:00');
+    d.setDate(d.getDate() + days);
+    return toISO(d);
+  }
+
+  return { today, format, offset, toISO };
+})();
+
+
+/* ==============================================================
+   MODULE: Api
+   所有 Supabase 网络请求，返回 Promise
+   新增接口只在这里添加，业务层无感知
+   ============================================================== */
+const Api = (() => {
+  let _url = '';
+  let _key = '';
+
+  function init(url, key) {
+    _url = url;
+    _key = key;
+  }
+
+  function _headers(extra = {}) {
+    return {
+      'Content-Type': 'application/json',
+      'apikey': _key,
+      'Authorization': 'Bearer ' + _key,
+      ...extra,
+    };
+  }
+
+  async function _fetch(path, opts = {}) {
+    const res = await fetch(`${_url}/rest/v1/${path}`, {
+      headers: _headers(opts.headers),
+      ...opts,
+    });
+    if (!res.ok) throw new Error(await res.text());
+    if (res.status === 204) return null;
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  }
+
+  async function loadConfig() {
+    const res = await fetch('/api/config');
+    if (!res.ok) throw new Error('config fetch failed');
+    return res.json();
+  }
+
+  async function fetchAllLogs() {
+    return _fetch('diet_logs?select=date,meal_type,content&order=date.desc');
+  }
+
+  async function upsertMeal(date, meal_type, content) {
+    return _fetch('diet_logs', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({ date, meal_type, content }),
+    });
+  }
+
+  async function deleteMeal(date, meal_type) {
+    return _fetch(`diet_logs?date=eq.${date}&meal_type=eq.${meal_type}`, {
+      method: 'DELETE',
+    });
+  }
+
+  return { init, loadConfig, fetchAllLogs, upsertMeal, deleteMeal };
+})();
+
+
+/* ==============================================================
+   MODULE: Store
+   应用状态（单一数据源），提供 getter / mutation
+   UI 层只读取，不直接修改
+   ============================================================== */
+const Store = (() => {
+  // 内部状态
+  const state = {
+    cache: {},        // { [date]: { [meal_type]: content } }
+    selectedDate: DateUtils.today(),
+    editingMeal: null, // 当前正在编辑的 meal key（或 null）
+  };
+
+  // ---- Getters ----
+  function getSelectedDate()   { return state.selectedDate; }
+  function getEditingMeal()    { return state.editingMeal; }
+  function getAllDates()        { return Object.keys(state.cache); }
+  function getDayLog(date)     { return state.cache[date] || {}; }
+  function getMealContent(date, mealKey) {
+    return (state.cache[date] || {})[mealKey] || '';
+  }
+  function getDayCount()       { return Object.keys(state.cache).length; }
+
+  // ---- Mutations ----
+  function hydrateCache(rows) {
+    state.cache = {};
+    for (const r of rows) {
+      if (!state.cache[r.date]) state.cache[r.date] = {};
+      state.cache[r.date][r.meal_type] = r.content;
+    }
+  }
+
+  function setSelectedDate(iso) { state.selectedDate = iso; }
+  function setEditingMeal(key)  { state.editingMeal = key; }
+
+  function setMeal(date, mealKey, content) {
+    if (!state.cache[date]) state.cache[date] = {};
+    state.cache[date][mealKey] = content;
+  }
+
+  function removeMeal(date, mealKey) {
+    if (!state.cache[date]) return;
+    delete state.cache[date][mealKey];
+    if (!Object.keys(state.cache[date]).length) delete state.cache[date];
+  }
+
+  return {
+    getSelectedDate, getEditingMeal, getAllDates, getDayLog,
+    getMealContent, getDayCount,
+    hydrateCache, setSelectedDate, setEditingMeal, setMeal, removeMeal,
+  };
+})();
+
+
+/* ==============================================================
+   MODULE: Toast
+   轻量通知，无状态
+   ============================================================== */
+const Toast = (() => {
+  let _timer = null;
+
+  function show(msg, duration = 2000) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.style.display = 'block';
+    clearTimeout(_timer);
+    _timer = setTimeout(() => { el.style.display = 'none'; }, duration);
+  }
+
+  function hide() {
+    clearTimeout(_timer);
+    document.getElementById('toast').style.display = 'none';
+  }
+
+  return { show, hide };
+})();
+
+
+/* ==============================================================
+   MODULE: Modal
+   通用确认弹窗
+   ============================================================== */
+const Modal = (() => {
+  let _onOk = null;
+
+  function confirm({ title, text, okLabel = '确认', onOk }) {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmText').textContent  = text;
+    document.getElementById('confirmOkBtn').textContent = okLabel;
+    _onOk = onOk;
+    document.getElementById('confirmModal').classList.add('open');
+  }
+
+  function close() {
+    document.getElementById('confirmModal').classList.remove('open');
+    _onOk = null;
+  }
+
+  function _bindEvents() {
+    document.getElementById('confirmCancelBtn').addEventListener('click', close);
+    document.getElementById('confirmOkBtn').addEventListener('click', () => {
+      close();
+      _onOk?.();
+    });
+  }
+
+  return { confirm, close, _bindEvents };
+})();
+
+
+/* ==============================================================
+   MODULE: RecordView
+   「记录」Tab 的全部渲染逻辑
+   ============================================================== */
+const RecordView = (() => {
+  // ---- 渲染入口 ----
+  function render() {
+    _renderDateLabel();
+    _renderMealCards();
+  }
+
+  function _renderDateLabel() {
+    const date  = Store.getSelectedDate();
+    const today = DateUtils.today();
+    const label = date === today ? `今天 · ${DateUtils.format(date)}` : DateUtils.format(date);
+    document.getElementById('dateLabel').textContent = label;
+  }
+
+  function _renderMealCards() {
+    const date    = Store.getSelectedDate();
+    const editing = Store.getEditingMeal();
+    const container = document.getElementById('mealCards');
+
+    container.innerHTML = MEALS.map(m => _buildCard(date, m, editing === m.key)).join('');
+
+    // 自动聚焦
+    if (editing) {
+      setTimeout(() => document.getElementById('edit-input')?.focus(), 50);
+    }
+  }
+
+  function _buildCard(date, meal, isEditing) {
+    const content = Store.getMealContent(date, meal.key);
+
+    const editBtnStyle = content
+      ? 'background:#f7f3ef;color:#9c8878;'
+      : `background:${meal.color};color:white;`;
+
+    const headerActions = isEditing ? '' : `
+      ${content ? `<button class="btn-del" data-action="delete" data-key="${meal.key}">×</button>` : ''}
+      <button class="btn-edit" style="${editBtnStyle}"
+              data-action="edit" data-key="${meal.key}">
+        ${content ? '编辑' : '+ 记录'}
+      </button>
+    `;
+
+    const body = isEditing
+      ? `<div class="meal-edit">
+           <textarea id="edit-input" rows="3"
+             placeholder="记录${meal.label}吃了什么...">${content}</textarea>
+           <div class="edit-btns">
+             <button class="btn-cancel" data-action="cancel">取消</button>
+             <button class="btn-save" style="background:${meal.color}"
+                     data-action="save" data-key="${meal.key}">保存</button>
+           </div>
+         </div>`
+      : (content ? `<div class="meal-content">${content}</div>` : '');
+
+    return `
+      <div class="meal-card ${isEditing ? 'editing' : ''}">
+        <div class="meal-header">
+          <div class="meal-left">
+            <div class="meal-dot" style="background:${meal.color}"></div>
+            <span class="meal-name">${meal.label}</span>
+          </div>
+          <div class="meal-actions">${headerActions}</div>
+        </div>
+        ${body}
+      </div>`;
+  }
+
+  // ---- 事件委托（挂在容器上，不用给每个按钮绑定） ----
+  function _bindEvents() {
+    document.getElementById('mealCards').addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+
+      const action = btn.dataset.action;
+      const key    = btn.dataset.key;
+
+      if (action === 'edit')   { Store.setEditingMeal(key); render(); }
+      if (action === 'cancel') { Store.setEditingMeal(null); render(); }
+      if (action === 'save')   { await _handleSave(key); }
+      if (action === 'delete') { await _handleDelete(key); }
+    });
+
+    document.getElementById('prevDateBtn').addEventListener('click', () => _changeDate(-1));
+    document.getElementById('nextDateBtn').addEventListener('click', () => _changeDate(1));
+  }
+
+  function _changeDate(delta) {
+    const next = DateUtils.offset(Store.getSelectedDate(), delta);
+    if (next > DateUtils.today()) { Toast.show('不能查看未来日期'); return; }
+    Store.setSelectedDate(next);
+    Store.setEditingMeal(null);
+    render();
+  }
+
+  async function _handleSave(key) {
+    const val = document.getElementById('edit-input')?.value?.trim();
+    if (!val) return;
+
+    const saveBtn = document.querySelector('[data-action="save"]');
+    if (saveBtn) saveBtn.textContent = '保存中...';
+
+    try {
+      await Api.upsertMeal(Store.getSelectedDate(), key, val);
+      Store.setMeal(Store.getSelectedDate(), key, val);
+      Store.setEditingMeal(null);
+      HeaderView.updateDayCount();
+      render();
+      Toast.show('已保存到云端 ☁️');
+    } catch (e) {
+      Toast.show('保存失败，请重试');
+      console.error(e);
+    }
+  }
+
+  async function _handleDelete(key) {
+    const meal = MEALS.find(m => m.key === key);
+    Modal.confirm({
+      title: `删除${meal?.label ?? '记录'}`,
+      text: '确定要删除吗？此操作不可恢复。',
+      okLabel: '删除',
+      onOk: async () => {
+        try {
+          await Api.deleteMeal(Store.getSelectedDate(), key);
+          Store.removeMeal(Store.getSelectedDate(), key);
+          HeaderView.updateDayCount();
+          render();
+          Toast.show('已删除');
+        } catch (e) {
+          Toast.show('删除失败');
+          console.error(e);
+        }
+      },
+    });
+  }
+
+  return { render, _bindEvents };
+})();
+
+
+/* ==============================================================
+   MODULE: HistoryView
+   「历史」Tab 的全部渲染逻辑
+   ============================================================== */
+const HistoryView = (() => {
+  function render() {
+    const dates = Store.getAllDates().sort((a, b) => b.localeCompare(a));
+    const el = document.getElementById('historyList');
+
+    if (!dates.length) {
+      el.innerHTML = '<div class="empty">还没有记录，快去记第一餐吧 🍚</div>';
+      return;
+    }
+
+    el.innerHTML = dates.map(date => _buildCard(date)).join('');
+  }
+
+  function _buildCard(date) {
+    const dayLog = Store.getDayLog(date);
+    const today  = DateUtils.today();
+    const label  = date === today ? `今天 · ${DateUtils.format(date)}` : DateUtils.format(date);
+    const count  = MEALS.filter(m => dayLog[m.key]).length;
+
+    const rows = MEALS
+      .filter(m => dayLog[m.key])
+      .map(m => `
+        <div class="hist-row">
+          <span class="hist-tag" style="background:${m.color}">${m.label}</span>
+          <span class="hist-food">${dayLog[m.key]}</span>
+        </div>`)
+      .join('');
+
+    return `
+      <div class="hist-card">
+        <div class="hist-date">
+          <span>${label}</span>
+          <span style="color:#ccc;font-size:11px">${count} 餐</span>
+        </div>
+        ${rows}
+      </div>`;
+  }
+
+  return { render };
+})();
+
+
+/* ==============================================================
+   MODULE: AnalysisView
+   「分析」Tab 的全部渲染逻辑
+   ============================================================== */
+const AnalysisView = (() => {
+  function render() {
+    const n = Store.getDayCount();
+    document.getElementById('statDays').textContent = n;
+    document.getElementById('statHint').textContent = n < 3
+      ? '继续记录，数据越多分析越准确 💪'
+      : '数据已充足，可以生成分析啦 🎉';
+  }
+
+  function _generatePrompt() {
+    const dates = Store.getAllDates().sort();
+    if (!dates.length) { Toast.show('还没有记录哦'); return null; }
+
+    const lines = dates.map(date => {
+      const parts = MEALS
+        .filter(m => Store.getMealContent(date, m.key))
+        .map(m => `${m.label}：${Store.getMealContent(date, m.key)}`)
+        .join('；');
+      return `${DateUtils.format(date)} ${parts}`;
+    }).join('\n');
+
+    return `以下是我最近的饮食记录：\n\n${lines}\n\n请作为营养师，用中文给我具体、实用的饮食改善建议。分析维度包括：营养均衡度、蛋白质/蔬菜/主食比例、饮食规律性、可能的营养缺口。语气亲切，建议具体可操作。`;
+  }
+
+  function _bindEvents() {
+    document.getElementById('analyzeBtn').addEventListener('click', () => {
+      const prompt = _generatePrompt();
+      if (!prompt) return;
+      document.getElementById('copyText').textContent = prompt;
+      document.getElementById('copyBox').style.display = 'block';
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const text = document.getElementById('copyText').textContent;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text)
+          .then(() => Toast.show('已复制 ✓ 请粘贴给 Claude'));
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+        Toast.show('已复制 ✓ 请粘贴给 Claude');
+      }
+    });
+  }
+
+  return { render, _bindEvents };
+})();
+
+
+/* ==============================================================
+   MODULE: HeaderView
+   顶部状态（天数统计）
+   ============================================================== */
+const HeaderView = (() => {
+  function updateDayCount() {
+    document.getElementById('dayCount').textContent = `已记录 ${Store.getDayCount()} 天`;
+  }
+  return { updateDayCount };
+})();
+
+
+/* ==============================================================
+   MODULE: TabController
+   Tab 切换逻辑
+   ============================================================== */
+const TabController = (() => {
+  let _current = 'record';
+
+  const _onEnter = {
+    record:   () => RecordView.render(),
+    history:  () => HistoryView.render(),
+    analysis: () => AnalysisView.render(),
+  };
+
+  function switchTo(tab) {
+    if (!TABS.includes(tab)) return;
+    _current = tab;
+
+    TABS.forEach(t => {
+      document.getElementById(`tab-${t}`).style.display = t === tab ? 'block' : 'none';
+    });
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+
+    _onEnter[tab]?.();
+  }
+
+  function _bindEvents() {
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.addEventListener('click', () => switchTo(btn.dataset.tab));
+    });
+  }
+
+  return { switchTo, _bindEvents };
+})();
+
+
+/* ==============================================================
+   MODULE: App
+   启动入口 — 协调初始化顺序
+   ============================================================== */
+const App = (() => {
+  async function boot() {
+    // 1. 绑定所有事件（在数据加载前，避免 UI 事件丢失）
+    Modal._bindEvents();
+    RecordView._bindEvents();
+    AnalysisView._bindEvents();
+    TabController._bindEvents();
+
+    // 2. 加载远端配置
+    try {
+      const cfg = await Api.loadConfig();
+      Api.init(cfg.url, cfg.key);
+    } catch (e) {
+      Toast.show('配置加载失败', 4000);
+      console.error(e);
+      return;
+    }
+
+    // 3. 拉取所有数据
+    Toast.show('连接数据库中...', 3000);
+    try {
+      const rows = await Api.fetchAllLogs();
+      Store.hydrateCache(rows);
+      Toast.hide();
+    } catch (e) {
+      Toast.show('连接失败，请检查配置', 4000);
+      console.error(e);
+      return;
+    }
+
+    // 4. 初始渲染
+    HeaderView.updateDayCount();
+    TabController.switchTo('record');
+
+    // 5. 显示 App
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+  }
+
+  return { boot };
+})();
+
+// 启动
+App.boot();
+</script>
 </body>
 </html>
