@@ -410,9 +410,10 @@ const Api = (() => {
   }
 
   async function _fetch(path, opts = {}) {
+    const { headers: extraHeaders, ...restOpts } = opts;
     const res = await fetch(`${_url}/rest/v1/${path}`, {
-      headers: _headers(opts.headers),
-      ...opts,
+      ...restOpts,
+      headers: _headers(extraHeaders),
     });
     if (!res.ok) throw new Error(await res.text());
     if (res.status === 204) return null;
