@@ -432,7 +432,7 @@ const Api = (() => {
   }
 
   async function upsertMeal(date, meal_type, content) {
-    return _fetch('diet_logs', {
+    return _fetch('diet_logs?on_conflict=date,meal_type', {
       method: 'POST',
       headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
       body: JSON.stringify({ date, meal_type, content }),
